@@ -1,0 +1,90 @@
+#!/usr/bin/env node
+function App (host) {
+  this.host = host;
+}
+
+App.prototype.run = function () {
+  pinger(this.host, function (type, data) {
+    if (type === 'ping') {
+      var bar = drawBar(data.time, { max: 2000, len: 20 });
+      var ms = Math.floor(data.time) + "ms";
+      ms = align(ms, -10);
+
+      // Colorize
+      if (data.time < 1000) ms = c(32, ms);
+      else ms = c(31, ms);
+
+      console.log("%s   %s", ms, bar);
+    }
+    else if (type === 'timeout') {
+      console.log("  !");
+    }
+    else if (type === 'error') {
+      console.error("ERR: ", data);
+    }
+  });
+};
+
+/**
+ * Ping runner
+ */
+
+function pinger(host, callback) {
+  var bin = 'ping';
+
+  var spawn = require('child_process').spawn;
+  var proc = spawn(bin, [ host ], { stdio: 'pipe' });
+
+  proc.on('error', function(err) {
+    callback('err', err);
+  });
+
+  proc.stdout.on('data', function (data) {
+    var lines = data.toString().split("\n");
+    lines.forEach(function (line) {
+      var m;
+      if (m = line.match(/time=([0-9\.]+) ms/))
+        callback('ping', { time: parseFloat(m[1], 10) });
+      else if (m = line.match(/Request timeout/))
+        callback('timeout');
+    });
+  });
+
+  proc.on('exit', function(code) {
+    process.exit(code);
+  });
+}
+
+/**
+ * Bar helper
+ */
+
+function drawBar (n, options) {
+  var perc = Math.max(Math.min(n / options.max, 1), 0);
+  var count = Math.round(perc * options.len);
+  var rest = options.len - count;
+  var fill = '•';
+  var space = ' ';
+  var str = Array(count).join(fill) + Array(rest).join(space);
+  return str.substr(0, options.len);
+}
+
+function align(str, n) {
+  var count = Math.abs(n);
+  var spaces = Math.max(0, count - str.length);
+  var pad = Array(spaces).join(" ");
+
+  return (n > 0) ? str+pad : pad+str;
+}
+
+function c(color, str) {
+  return "\033["+color+"m"+str+"\033[0m";
+}
+
+/**
+ * Run it
+ */
+
+var host = process.argv[2] || '8.8.8.8';
+var app = new App(host);
+app.run();
