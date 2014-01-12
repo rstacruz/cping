@@ -4,20 +4,22 @@ function App (host) {
 }
 
 App.prototype.run = function () {
+  console.log('\033[2J\033[0;0H');
+
+  function print(left, color, right) {
+    console.log(c(color, align(left, -5)) + "   " + right);
+  }
+
   pinger(this.host, function (type, data) {
     if (type === 'ping') {
-      var bar = drawBar(data.time, { max: 2000, len: 20 });
-      var ms = Math.floor(data.time) + "ms";
-      ms = align(ms, -10);
+      var bar = drawBar(data.time, { max: 5000, len: 50 });
+      var ms = Math.floor(data.time) + "";
+      var color = (data.time < 1000) ? 32 : 31;
 
-      // Colorize
-      if (data.time < 1000) ms = c(32, ms);
-      else ms = c(31, ms);
-
-      console.log("%s   %s", ms, bar);
+      print(ms, color, bar);
     }
-    else if (type === 'timeout') {
-      console.log("  !");
+    else if (type === 'failed') {
+      print("✗", 31, c(30, data.message));
     }
     else if (type === 'error') {
       console.error("ERR: ", data);
@@ -35,24 +37,27 @@ function pinger(host, callback) {
   var spawn = require('child_process').spawn;
   var proc = spawn(bin, [ host ], { stdio: 'pipe' });
 
-  proc.on('error', function(err) {
-    callback('err', err);
-  });
-
-  proc.stdout.on('data', function (data) {
+  function ondata (stream, data) {
     var lines = data.toString().split("\n");
     lines.forEach(function (line) {
-      var m;
-      if (m = line.match(/time=([0-9\.]+) ms/))
-        callback('ping', { time: parseFloat(m[1], 10) });
-      else if (m = line.match(/Request timeout/))
-        callback('timeout');
-    });
-  });
+      if (line === '') return;
 
-  proc.on('exit', function(code) {
-    process.exit(code);
-  });
+      var m;
+      if (m = line.match(/time=([0-9\.]+) ms/)) {
+        callback('ping', { time: parseFloat(m[1], 10) });
+      }
+      else if ((stream === 'err') || (m = line.match(/Request timeout/))) {
+        if (line.match(/Request timeout/)) line = 'timeout';
+        else line = line.replace(/^ping: (sendto: )?/, '');
+        callback('failed', { message: line });
+      }
+    });
+  };
+
+  proc.stdout.on('data', function (data) { ondata('out', data); });
+  proc.stderr.on('data', function (data) { ondata('err', data); });
+  proc.on('error', function (err) { callback('err', err); });
+  proc.on('exit', function (code) { process.exit(code); });
 }
 
 /**
@@ -60,19 +65,20 @@ function pinger(host, callback) {
  */
 
 function drawBar (n, options) {
-  var perc = Math.max(Math.min(n / options.max, 1), 0);
+  var perc = Math.max(0, n / options.max);
+  if (options.cap === false) perc = Math.min(1, perc);
   var count = Math.round(perc * options.len);
   var rest = options.len - count;
-  var fill = '•';
-  var space = ' ';
-  var str = Array(count).join(fill) + Array(rest).join(space);
+  var fill = '❘';
+  var space = '';
+  var str = Array(count+1).join(fill) + Array(rest+1).join(space);
   return str.substr(0, options.len);
 }
 
 function align(str, n) {
   var count = Math.abs(n);
   var spaces = Math.max(0, count - str.length);
-  var pad = Array(spaces).join(" ");
+  var pad = Array(spaces+1).join(" ");
 
   return (n > 0) ? str+pad : pad+str;
 }
