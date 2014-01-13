@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+/*
+ * Continuous ping
+ */
+
 function App (host) {
   this.host = host;
 }
@@ -19,9 +23,9 @@ App.prototype.run = function () {
       print(ms, color, bar);
     }
     else if (type === 'failed') {
-      print("✗", 31, c(30, data.message));
+      print("✗", 31, c(31, data.message));
     }
-    else if (type === 'error') {
+    else if (type === 'err') {
       console.error("ERR: ", data);
     }
   });
@@ -49,7 +53,7 @@ function pinger(host, callback) {
       else if ((stream === 'err') || (m = line.match(/Request timeout/))) {
         if (line.match(/Request timeout/)) line = 'timeout';
         else line = line.replace(/^ping: (sendto: )?/, '');
-        callback('failed', { message: line });
+        callback('failed', { message: line.toLowerCase() });
       }
     });
   };
@@ -71,20 +75,32 @@ function drawBar (n, options) {
   var rest = options.len - count;
   var fill = '❘';
   var space = '';
-  var str = Array(count+1).join(fill) + Array(rest+1).join(space);
+  var str = repeat(fill, count) + repeat(space, rest);
   return str.substr(0, options.len);
 }
+
+/**
+ * Alignment helper
+ */
 
 function align(str, n) {
   var count = Math.abs(n);
   var spaces = Math.max(0, count - str.length);
-  var pad = Array(spaces+1).join(" ");
+  var pad = repeat(" ", spaces);
 
   return (n > 0) ? str+pad : pad+str;
 }
 
+/**
+ * Color helper
+ */
+
 function c(color, str) {
   return "\033["+color+"m"+str+"\033[0m";
+}
+
+function repeat(str, n) {
+  return Array(Math.max(0, 1+n)).join(str);
 }
 
 /**
