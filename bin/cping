@@ -127,9 +127,9 @@ var Ticker = {
     var ticker = this;
     var char = ticker.frames[ticker.i % ticker.frames.length];
     var count = Math.min(this.maxLength, Math.floor(ticker.i / 2));
-    var bar = repeat(ticker.dot, count);
+    var bar = c(30, repeat(ticker.dot, count));
     ticker.i++;
-    process.stdout.write("\033[2K\r" + "    " + c(32, char) + "   " + c(30, bar) + "\r");
+    process.stdout.write("\033[2K\r" + "    " + c(32, char) + "   " + bar + "\r");
     ticker.id = setTimeout(function () { ticker.frame(); }, ticker.interval);
   },
 
