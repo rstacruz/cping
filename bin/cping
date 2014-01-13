@@ -15,6 +15,7 @@ App.prototype.run = function () {
   }
 
   pinger(this.host, function (type, data) {
+    Ticker.stop();
     if (type === 'ping') {
       var bar = drawBar(data.time, { max: 5000, len: 50 });
       var ms = Math.floor(data.time) + "";
@@ -28,6 +29,7 @@ App.prototype.run = function () {
     else if (type === 'err') {
       console.error("ERR: ", data);
     }
+    Ticker.start();
   });
 };
 
@@ -102,6 +104,43 @@ function c(color, str) {
 function repeat(str, n) {
   return Array(Math.max(0, 1+n)).join(str);
 }
+
+/**
+ * Lol
+ */
+
+var Ticker = {
+  interval: 50,
+  i: 0,
+  frames: '◜◠◝◞◡◟'.split(''),
+  dot: '·',
+  maxLength: 40,
+
+  start: function () {
+    var ticker = this;
+    this.i = 0;
+    ticker.stop();
+    ticker.frame();
+  },
+
+  frame: function () {
+    var ticker = this;
+    var char = ticker.frames[ticker.i % ticker.frames.length];
+    var count = Math.min(this.maxLength, Math.floor(ticker.i / 2));
+    var bar = repeat(ticker.dot, count);
+    ticker.i++;
+    process.stdout.write("\033[2K\r" + "    " + c(32, char) + "   " + c(30, bar) + "\r");
+    ticker.id = setTimeout(function () { ticker.frame(); }, ticker.interval);
+  },
+
+  stop: function () {
+    if (this.id) {
+      process.stdout.write("\033[2K\r");
+      clearTimeout(this.id);
+      delete this.id;
+    }
+  }
+};
 
 /**
  * Run it
