@@ -14,6 +14,7 @@ App.prototype.run = function () {
     console.log(c(color, align(left, -5)) + "   " + right);
   }
 
+  Ticker.start();
   pinger(this.host, function (type, data) {
     Ticker.stop();
     if (type === 'ping') {
@@ -110,11 +111,12 @@ function repeat(str, n) {
  */
 
 var Ticker = {
-  interval: 50,
+  interval: 80,
   i: 0,
   frames: '◜◠◝◞◡◟'.split(''),
   dot: '·',
-  maxLength: 40,
+  maxLength: 20,
+  timeout: 2000,
 
   start: function () {
     var ticker = this;
@@ -127,9 +129,16 @@ var Ticker = {
     var ticker = this;
     var char = ticker.frames[ticker.i % ticker.frames.length];
     var count = Math.min(this.maxLength, Math.floor(ticker.i / 2));
-    var bar = c(30, repeat(ticker.dot, count));
+
+    var elapsed = ticker.interval * ticker.i;
+    var timeout = elapsed >= ticker.timeout;
+
+    var color = timeout ? 31 : 32;
+
+    var bar = c(timeout ? 31 : 30, repeat(ticker.dot, count));
     ticker.i++;
-    process.stdout.write("\033[2K\r" + "    " + c(32, char) + "   " + bar + "\r");
+
+    process.stdout.write("\033[2K\r" + "    " + c(color, char) + "   " + bar + "\r");
     ticker.id = setTimeout(function () { ticker.frame(); }, ticker.interval);
   },
 
