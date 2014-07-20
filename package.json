@@ -1,0 +1,22 @@
+{
+  "name": "cping",
+  "version": "0.9.9",
+  "description": "Continuous ping utility for the CLI.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/rstacruz/cping.git"
+  },
+  "keywords": [
+    "ping"
+  ],
+  "author": "Rico Sta. Cruz <hi@ricostacruz.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rstacruz/cping/issues"
+  },
+  "homepage": "https://github.com/rstacruz/cping"
+}
