@@ -3,6 +3,9 @@
   "version": "0.9.9",
   "description": "Continuous ping utility for the CLI.",
   "main": "index.js",
+  "bin": {
+    "cping": "./bin/cping"
+  },
   "scripts": {
     "test": "mocha"
   },
