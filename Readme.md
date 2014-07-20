@@ -1,11 +1,15 @@
 # cping
 
-<img align='right' src='http://ricostacruz.com/cping/screenshot.gif' alt='Screencast'>
+<img align='right' src='http://ricostacruz.com/cping/screenshot.gif'  alt='Screencast'>
 
 Continuous ping utility for monitoring your net connection.
 
-    $ npm install -g cping
-    $ cping [host]
+ * `npm install -g cping`
+ * `cping [hostname]`
+
+The `hostname` defaults to *8.8.8.8*.
+
+<br clear='both'>
 
 ## Thanks
 
