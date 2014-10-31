@@ -17,6 +17,8 @@ App.prototype.run = function () {
   Ticker.start();
   pinger(this.host, function (type, data) {
     Ticker.stop();
+    var id = data.id;
+
     if (type === 'ping') {
       var bar = drawBar(data.time, { max: 5000, len: 50 });
       var ms = Math.floor(data.time) + "";
@@ -36,6 +38,13 @@ App.prototype.run = function () {
 
 /**
  * Ping runner
+ *
+ *    ping('8.8.8.8', function (event, options) {
+ *      arguments
+ *      //=> [ 'ping', { time: 382.82 } ]
+ *      //=> [ 'failed', { message: "request timed out" } ]
+ *      //=> [ 'err', "no route to host" ]
+ *    })
  */
 
 function pinger(host, callback) {
@@ -50,13 +59,16 @@ function pinger(host, callback) {
       if (line === '') return;
 
       var m;
+
+      var seq = (m = line.match(/icmp_seq[= ](\d+)/)) && parseInt(m[1], 10);
+
       if (m = line.match(/time=([0-9\.]+) ms/)) {
-        callback('ping', { time: parseFloat(m[1], 10) });
+        callback('ping', { time: parseFloat(m[1], 10), id: seq });
       }
       else if ((stream === 'err') || (m = line.match(/Request timeout/))) {
         if (line.match(/Request timeout/)) line = 'timeout';
         else line = line.replace(/^ping: (sendto: )?/, '');
-        callback('failed', { message: line.toLowerCase() });
+        callback('failed', { message: line.toLowerCase(), id: seq });
       }
     });
   };
