@@ -1,6 +1,6 @@
 {
   "name": "cping",
-  "version": "0.9.9",
+  "version": "1.0.0",
   "description": "Continuous ping utility for the CLI.",
   "main": "index.js",
   "bin": {
