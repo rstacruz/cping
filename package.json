@@ -21,5 +21,8 @@
   "bugs": {
     "url": "https://github.com/rstacruz/cping/issues"
   },
-  "homepage": "https://github.com/rstacruz/cping"
+  "homepage": "https://github.com/rstacruz/cping",
+  "dependencies": {
+    "split": "^0.3.3"
+  }
 }

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+var split = require('split');
 /*
  * Continuous ping
  */
@@ -53,28 +54,25 @@ function pinger(host, callback) {
   var spawn = require('child_process').spawn;
   var proc = spawn(bin, [ host ], { stdio: 'pipe' });
 
-  function ondata (stream, data) {
-    var lines = data.toString().split("\n");
-    lines.forEach(function (line) {
-      if (line === '') return;
+  function ondata (stream, line) {
+    if (line === '') return;
 
-      var m;
+    var m;
 
-      var seq = (m = line.match(/icmp_seq[= ](\d+)/)) && parseInt(m[1], 10);
+    var seq = (m = line.match(/icmp_seq[= ](\d+)/)) && parseInt(m[1], 10);
 
-      if (m = line.match(/time=([0-9\.]+) ms/)) {
-        callback('ping', { time: parseFloat(m[1], 10), id: seq });
-      }
-      else if ((stream === 'err') || (m = line.match(/Request timeout/))) {
-        if (line.match(/Request timeout/)) line = 'timeout';
-        else line = line.replace(/^ping: (sendto: )?/, '');
-        callback('failed', { message: line.toLowerCase(), id: seq });
-      }
-    });
+    if (m = line.match(/time=([0-9\.]+) ms/)) {
+      callback('ping', { time: parseFloat(m[1], 10), id: seq });
+    }
+    else if ((stream === 'err') || (m = line.match(/Request timeout/))) {
+      if (line.match(/Request timeout/)) line = 'timeout';
+      else line = line.replace(/^ping: (sendto: )?/, '');
+      callback('failed', { message: line.toLowerCase(), id: seq });
+    }
   };
 
-  proc.stdout.on('data', function (data) { ondata('out', data); });
-  proc.stderr.on('data', function (data) { ondata('err', data); });
+  proc.stdout.pipe(split()).on('data', function (line) { ondata('out', line); });
+  proc.stderr.pipe(split()).on('data', function (line) { ondata('err', line); });
   proc.on('error', function (err) { callback('err', err); });
   proc.on('exit', function (code) { process.exit(code); });
 }
